@@ -1,0 +1,22 @@
+server:
+  port: 8484
+
+spring:
+  application:
+    name: project-reservations
+  datasource:
+    password: Lovelace
+    url: jdbc:postgresql://localhost:5432/reservaciones
+    username: ada
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+
