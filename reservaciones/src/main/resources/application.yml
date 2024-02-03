@@ -19,4 +19,12 @@ spring:
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+    logging:
+      level:
+        org:
+          hibernate:
+            type:
+              descriptor:
+                sql: trace
+
 

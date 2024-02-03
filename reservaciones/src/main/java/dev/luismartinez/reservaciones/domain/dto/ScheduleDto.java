@@ -9,7 +9,6 @@ import java.time.LocalTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ScheduleDto(
     Long id,
-    String description,
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     DayOfWeek dayOfWeek,
     @JsonFormat(pattern="HH:mm:ss")
