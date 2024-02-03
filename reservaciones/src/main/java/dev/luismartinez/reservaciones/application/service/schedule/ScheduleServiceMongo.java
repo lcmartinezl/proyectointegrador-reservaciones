@@ -3,23 +3,21 @@ package dev.luismartinez.reservaciones.application.service.schedule;
 import dev.luismartinez.reservaciones.application.exception.ReservationsException;
 import dev.luismartinez.reservaciones.application.lasting.EMessage;
 import dev.luismartinez.reservaciones.domain.dto.ScheduleDto;
-import dev.luismartinez.reservaciones.domain.entity.jpa.Schedule;
-import dev.luismartinez.reservaciones.domain.repository.jpa.ScheduleRepositoryJpa;
+import dev.luismartinez.reservaciones.domain.entity.mongo.Schedule;
+import dev.luismartinez.reservaciones.domain.repository.mongo.ScheduleRepositoryMongo;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public record ScheduleServiceJpa(
-        ScheduleRepositoryJpa scheduleRepository
-) implements ScheduleGenericService<ScheduleDto, Long> {
+@Service
+public record ScheduleServiceMongo (
+    ScheduleRepositoryMongo scheduleRepository
+) implements ScheduleGenericService<ScheduleDto, String> {
 
     public ScheduleDto save(ScheduleDto scheduleDto)  throws ReservationsException {
-        this.validateSchedule(scheduleDto, (long) -1);
-        /**Schedule schedule = new Schedule(
-                (Long)scheduleDto.id(), scheduleDto.dayOfWeek(),
-                scheduleDto.initTime(),scheduleDto.finishTime());*/
+        this.validateSchedule(scheduleDto, "");
         Schedule schedule = Schedule.builder()
                 .dayOfWeek(scheduleDto.dayOfWeek())
                 .initTime(scheduleDto.initTime())
@@ -33,7 +31,7 @@ public record ScheduleServiceJpa(
                 schedule1.getFinishTime()
         );
     }
-    public ScheduleDto findById(Long id) throws ReservationsException {
+    public ScheduleDto findById(String id) throws ReservationsException {
         Optional<Schedule> schedule = scheduleRepository.findById(id);
 
         if (schedule.isPresent()) {
@@ -63,7 +61,7 @@ public record ScheduleServiceJpa(
         return listDto;
     }
 
-    public void update(ScheduleDto scheduleDto,Long id) throws ReservationsException {
+    public void update(ScheduleDto scheduleDto,String id) throws ReservationsException {
         Optional<Schedule> schedule1 = scheduleRepository.findById(id);
         if (!schedule1.isPresent()) {
             throw new ReservationsException(EMessage.SCHEDULE_NOT_FOUND);
@@ -76,7 +74,7 @@ public record ScheduleServiceJpa(
 
     }
 
-    public void deleteById(Long id)  throws ReservationsException {
+    public void deleteById(String id)  throws ReservationsException {
         Optional<Schedule> schedule1 = scheduleRepository.findById(id);
         if (!schedule1.isPresent()) {
             throw new ReservationsException(EMessage.SCHEDULE_NOT_FOUND);
@@ -86,13 +84,13 @@ public record ScheduleServiceJpa(
 
     }
 
-    private void validateSchedule(ScheduleDto scheduleDto, Long id)  throws ReservationsException {
+    private void validateSchedule(ScheduleDto scheduleDto, String id)  throws ReservationsException {
         if (scheduleDto.finishTime().isBefore(scheduleDto.initTime())) {
             throw new ReservationsException(EMessage.SCHEDULE_INVALID_TIME_RANGE);
         }
 
 
-        if (id == -1) {
+        if (id.isEmpty()) {
             List<Schedule> listDay = scheduleRepository.findByDayOfWeekOrderByInitTimeAsc(scheduleDto.dayOfWeek());
             // Validar que no hayan dos registros con el mismo dia
             if (!listDay.isEmpty()) {
@@ -109,7 +107,4 @@ public record ScheduleServiceJpa(
 
 
     }
-
-
-
 }

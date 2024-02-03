@@ -3,18 +3,19 @@ package dev.luismartinez.reservaciones.application.service.table;
 import dev.luismartinez.reservaciones.application.exception.ReservationsException;
 import dev.luismartinez.reservaciones.application.lasting.EMessage;
 import dev.luismartinez.reservaciones.domain.dto.RestaurantTableDto;
-import dev.luismartinez.reservaciones.domain.entity.jpa.RestaurantTable;
-import dev.luismartinez.reservaciones.domain.repository.jpa.RestaurantTableRepositoryJpa;
+import dev.luismartinez.reservaciones.domain.entity.mongo.RestaurantTable;
+import dev.luismartinez.reservaciones.domain.repository.mongo.RestaurantTableRepositoryMongo;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Service
+public record RestaurantTableServiceMongo(
+        RestaurantTableRepositoryMongo repository
+) implements  RestaurantTableGenericService <RestaurantTableDto, String> {
 
-public record RestaurantTableServiceJpa(
-        RestaurantTableRepositoryJpa repository
-) implements  RestaurantTableGenericService <RestaurantTableDto, Long>{
     @Override
     public RestaurantTableDto save(RestaurantTableDto dto) {
         RestaurantTable table = RestaurantTable.builder()
@@ -26,7 +27,7 @@ public record RestaurantTableServiceJpa(
     }
 
     @Override
-    public RestaurantTableDto findById(Long id) throws ReservationsException {
+    public RestaurantTableDto findById(String id) throws ReservationsException {
         Optional<RestaurantTable> table = repository.findById(id);
         if (table.isPresent()) {
             return new RestaurantTableDto(table.get().getId(), table.get().getName(), table.get().getTotalSeats());
@@ -47,7 +48,7 @@ public record RestaurantTableServiceJpa(
     }
 
     @Override
-    public void deleteById(Long id) throws ReservationsException {
+    public void deleteById(String id) throws ReservationsException {
         Optional<RestaurantTable> table = repository.findById(id);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
@@ -56,7 +57,7 @@ public record RestaurantTableServiceJpa(
     }
 
     @Override
-    public void update(RestaurantTableDto dto, Long id) throws ReservationsException {
+    public void update(RestaurantTableDto dto, String id) throws ReservationsException {
         Optional<RestaurantTable> table = repository.findById(id);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);

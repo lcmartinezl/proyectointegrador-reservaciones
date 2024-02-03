@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: project-reservations
+  data:
+    mongodb:
+      uri: mongodb+srv://admin:passw0rd@cluster0.okfa3kr.mongodb.net/reservations?retryWrites=true&w=majority
   datasource:
     password: Lovelace
     url: jdbc:postgresql://localhost:5432/reservaciones

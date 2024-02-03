@@ -4,12 +4,12 @@ import dev.luismartinez.reservaciones.application.exception.ReservationsExceptio
 import dev.luismartinez.reservaciones.application.lasting.EMessage;
 import dev.luismartinez.reservaciones.domain.dto.AvailabiltyDto;
 import dev.luismartinez.reservaciones.domain.dto.BookingDto;
-import dev.luismartinez.reservaciones.domain.entity.jpa.Booking;
-import dev.luismartinez.reservaciones.domain.entity.jpa.RestaurantTable;
-import dev.luismartinez.reservaciones.domain.entity.jpa.Schedule;
-import dev.luismartinez.reservaciones.domain.repository.jpa.BookingRepositoryJpa;
-import dev.luismartinez.reservaciones.domain.repository.jpa.RestaurantTableRepositoryJpa;
-import dev.luismartinez.reservaciones.domain.repository.jpa.ScheduleRepositoryJpa;
+import dev.luismartinez.reservaciones.domain.entity.mongo.Booking;
+import dev.luismartinez.reservaciones.domain.entity.mongo.RestaurantTable;
+import dev.luismartinez.reservaciones.domain.entity.mongo.Schedule;
+import dev.luismartinez.reservaciones.domain.repository.mongo.BookingRepositoryMongo;
+import dev.luismartinez.reservaciones.domain.repository.mongo.RestaurantTableRepositoryMongo;
+import dev.luismartinez.reservaciones.domain.repository.mongo.ScheduleRepositoryMongo;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,25 +19,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Service
+public record BookingServiceMongo(
+        BookingRepositoryMongo bookingRepository,
+        RestaurantTableRepositoryMongo tableRepository,
+        ScheduleRepositoryMongo scheduleRepository
+) implements BookinkGenericService<BookingDto,String> {
 
-public record BookingServiceJpa (
-    BookingRepositoryJpa bookingRepository,
-    RestaurantTableRepositoryJpa  tableRepository,
-    ScheduleRepositoryJpa scheduleRepository
-) implements BookinkGenericService<BookingDto,Long> {
     @Override
     public BookingDto save(BookingDto dto) throws ReservationsException {
-        Long tableId = (long)0;
-        if (dto.tableId() instanceof Integer) {
-            tableId = ((Integer) dto.tableId()).longValue();
-        } if (dto.tableId() instanceof Long) {
-            tableId = (Long) dto.tableId();
-        }
-        Optional<RestaurantTable> table = tableRepository.findById(tableId);
+
+        Optional<RestaurantTable> table = tableRepository.findById((String) dto.tableId());
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
         }
-        validateBooking(dto, table.get(), (long)-1);
+        System.out.println("create booking");
+        System.out.println(dto);
+        validateBooking(dto, table.get(), "");
 
         Booking booking = Booking.builder()
                 .initDate(dto.initDate())
@@ -48,6 +46,7 @@ public record BookingServiceJpa (
                 .customerPhoneNumber(dto.customerPhoneNumber())
                 .peopleNumber(dto.peopleNumber())
                 .build();
+
         Booking saved = bookingRepository.save(booking);
         return new BookingDto(
                 saved.getId(),
@@ -58,11 +57,11 @@ public record BookingServiceJpa (
                 saved.getCustomerEmail(),
                 saved.getCustomerPhoneNumber(),
                 saved.getPeopleNumber()
-                );
+        );
     }
 
     @Override
-    public BookingDto findById(Long id) throws ReservationsException {
+    public BookingDto findById(String id) throws ReservationsException {
         Optional<Booking> booking = bookingRepository.findById(id);
         if (!booking.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NOT_FOUND);
@@ -101,7 +100,7 @@ public record BookingServiceJpa (
     }
 
     @Override
-    public void deleteById(Long id) throws ReservationsException {
+    public void deleteById(String id) throws ReservationsException {
         Optional<Booking> booking = bookingRepository.findById(id);
         if (!booking.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NOT_FOUND);
@@ -110,18 +109,13 @@ public record BookingServiceJpa (
     }
 
     @Override
-    public void update(BookingDto dto, Long id) throws ReservationsException {
+    public void update(BookingDto dto, String id) throws ReservationsException {
         Optional<Booking> booking = bookingRepository.findById(id);
         if (!booking.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NOT_FOUND);
         }
-        Long tableId = (long)0;
-        if (dto.tableId() instanceof Integer) {
-            tableId = ((Integer) dto.tableId()).longValue();
-        } if (dto.tableId() instanceof Long) {
-            tableId = (Long) dto.tableId();
-        }
-        Optional<RestaurantTable> table = tableRepository.findById(tableId);
+
+        Optional<RestaurantTable> table = tableRepository.findById((String)dto.tableId());
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
         }
@@ -143,7 +137,7 @@ public record BookingServiceJpa (
 
 
 
-    private void validateBooking(BookingDto bookingDto, RestaurantTable table, Long id) throws ReservationsException {
+    private void validateBooking(BookingDto bookingDto, RestaurantTable table, String id) throws ReservationsException {
         // Validar que si haya un Schedule definido el dia de la fecha del booking
         Optional<Schedule> schedule = scheduleRepository.findOneByDayOfWeek(bookingDto.initDate().getDayOfWeek());
         if (!schedule.isPresent()) {
@@ -167,7 +161,7 @@ public record BookingServiceJpa (
         System.out.println(date.atStartOfDay().plusHours(23).plusMinutes(59));
         List<Booking> bl = bookingRepository.findByTableAndInitDateBetweenOrderByInitDateAsc(table, date.atStartOfDay(), date.atStartOfDay().plusHours(23).plusMinutes(59));
         for (Booking b: bl) {
-            if (b.getId() == id) {
+            if (b.getId().equals(id)) {
                 continue;
             }
             //System.out.println(b);
@@ -185,7 +179,7 @@ public record BookingServiceJpa (
         }
     }
 
-    public List<AvailabiltyDto> findAvailability(Long tableId, LocalDate date) throws ReservationsException {
+    public List<AvailabiltyDto> findAvailability(String tableId, LocalDate date) throws ReservationsException {
         Optional<RestaurantTable> table = tableRepository.findById(tableId);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
@@ -200,7 +194,7 @@ public record BookingServiceJpa (
         LocalDateTime finalDate = LocalDateTime.of(date, schedule.get().getFinishTime());
         boolean cicle = true;
         while (cicle) {
-            List<Booking> bookingList =  bookingRepository.findByTableAndInitDateGreaterThanEqualAndInitDateLessThanOrderByInitDateAsc(table.get(), initialDate, finalDate);
+            List<Booking> bookingList =  bookingRepository.findByTableAndInitDateGreaterThanEqualAndFinishDateLessThanOrderByInitDateAsc(table.get(), initialDate, finalDate);
             if (!bookingList.isEmpty()) {
                 Booking b = bookingList.get(0);
                 if (b.getInitDate().equals(initialDate)) {

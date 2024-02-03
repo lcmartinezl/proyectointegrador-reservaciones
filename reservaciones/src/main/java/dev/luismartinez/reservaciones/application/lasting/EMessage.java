@@ -15,7 +15,11 @@ public enum EMessage {
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "The reservation was not found"),
     RESERVATION_NO_SCHEDULE_FOUND(HttpStatus.CONFLICT, "No Schedule available for the date/time of the Reservation"),
     RESERVATION_SAME_DAYTIME(HttpStatus.CONFLICT, "The table is already reserved for the date/time requested"),
-    RESERVATION_NO_SEATS_AVAILABLE(HttpStatus.CONFLICT, "The reservation has more number of people than the seats available for the table");
+    RESERVATION_NO_SEATS_AVAILABLE(HttpStatus.CONFLICT, "The reservation has more number of people than the seats available for the table"),
+
+    DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "The data was not found"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "The User was not found"),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "The user was not Authorized to access at the application");
     private final HttpStatus status;
     private final String message;
     EMessage(HttpStatus status, String message) {

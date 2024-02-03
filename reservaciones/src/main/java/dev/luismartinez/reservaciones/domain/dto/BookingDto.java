@@ -2,16 +2,18 @@ package dev.luismartinez.reservaciones.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record BookingDto(
-        Long id,
+        Object id,
         @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
         LocalDateTime initDate,
         Long minutesDuration,
-        Long tableId,
+        Object tableId,
         String customerName,
         String customerEmail,
         String customerPhoneNumber,
