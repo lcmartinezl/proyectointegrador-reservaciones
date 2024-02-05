@@ -22,14 +22,13 @@ public record RestaurantTableServiceJpa(
                 .name(dto.name())
                 .totalSeats(dto.totalSeats())
                 .build();
-        System.out.println("REPOSITORY");
-        System.out.println(repository);
         RestaurantTable saved = repository.save(table);
         return new RestaurantTableDto(saved.getId(), saved.getName(), saved.getTotalSeats());
     }
 
     @Override
     public RestaurantTableDto findById(Long id) throws ReservationsException {
+        //Validar que exista la mesa con el id
         Optional<RestaurantTable> table = repository.findById(id);
         if (table.isPresent()) {
             return new RestaurantTableDto(table.get().getId(), table.get().getName(), table.get().getTotalSeats());
@@ -51,6 +50,7 @@ public record RestaurantTableServiceJpa(
 
     @Override
     public void deleteById(Long id) throws ReservationsException {
+        //Validar que exista la mesa con el id
         Optional<RestaurantTable> table = repository.findById(id);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
@@ -60,6 +60,7 @@ public record RestaurantTableServiceJpa(
 
     @Override
     public void update(RestaurantTableDto dto, Long id) throws ReservationsException {
+        //Validar que exista la mesa con el id
         Optional<RestaurantTable> table = repository.findById(id);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);

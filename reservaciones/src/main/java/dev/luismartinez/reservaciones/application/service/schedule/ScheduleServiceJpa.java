@@ -17,10 +17,9 @@ public record ScheduleServiceJpa(
 ) implements ScheduleGenericService<ScheduleDto, Long> {
 
     public ScheduleDto save(ScheduleDto scheduleDto)  throws ReservationsException {
+        //Llamada a validar schedule, con parametro ir en -1 por ser registro nuevo
         this.validateSchedule(scheduleDto, (long) -1);
-        /**Schedule schedule = new Schedule(
-                (Long)scheduleDto.id(), scheduleDto.dayOfWeek(),
-                scheduleDto.initTime(),scheduleDto.finishTime());*/
+
         Schedule schedule = Schedule.builder()
                 .dayOfWeek(scheduleDto.dayOfWeek())
                 .initTime(scheduleDto.initTime())
@@ -88,6 +87,7 @@ public record ScheduleServiceJpa(
     }
 
     private void validateSchedule(ScheduleDto scheduleDto, Long id)  throws ReservationsException {
+        // Validar que la hora final este antes que la inicial
         if (scheduleDto.finishTime().isBefore(scheduleDto.initTime())) {
             throw new ReservationsException(EMessage.SCHEDULE_INVALID_TIME_RANGE);
         }

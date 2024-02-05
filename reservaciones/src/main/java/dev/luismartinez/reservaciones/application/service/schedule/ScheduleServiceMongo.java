@@ -17,6 +17,7 @@ public record ScheduleServiceMongo (
 ) implements ScheduleGenericService<ScheduleDto, String> {
 
     public ScheduleDto save(ScheduleDto scheduleDto)  throws ReservationsException {
+        //Llamada a validar schedule, con parametro ir en "" por ser registro nuevo
         this.validateSchedule(scheduleDto, "");
         Schedule schedule = Schedule.builder()
                 .dayOfWeek(scheduleDto.dayOfWeek())
@@ -85,6 +86,7 @@ public record ScheduleServiceMongo (
     }
 
     private void validateSchedule(ScheduleDto scheduleDto, String id)  throws ReservationsException {
+        // Validar que la hora final este antes que la inicial
         if (scheduleDto.finishTime().isBefore(scheduleDto.initTime())) {
             throw new ReservationsException(EMessage.SCHEDULE_INVALID_TIME_RANGE);
         }

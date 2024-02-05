@@ -2,7 +2,7 @@ package dev.luismartinez.reservaciones.application.service.booking;
 
 import dev.luismartinez.reservaciones.application.exception.ReservationsException;
 import dev.luismartinez.reservaciones.application.lasting.EMessage;
-import dev.luismartinez.reservaciones.domain.dto.AvailabiltyDto;
+import dev.luismartinez.reservaciones.domain.dto.Availability;
 import dev.luismartinez.reservaciones.domain.dto.BookingDto;
 import dev.luismartinez.reservaciones.domain.entity.jpa.Booking;
 import dev.luismartinez.reservaciones.domain.entity.jpa.RestaurantTable;
@@ -27,20 +27,27 @@ public record BookingServiceJpa (
 ) implements BookinkGenericService<BookingDto,Long> {
     @Override
     public BookingDto save(BookingDto dto) throws ReservationsException {
+        // Convertir a Long, en dependencia si viene un Int en el dto
         Long tableId = (long)0;
         if (dto.tableId() instanceof Integer) {
             tableId = ((Integer) dto.tableId()).longValue();
         } if (dto.tableId() instanceof Long) {
             tableId = (Long) dto.tableId();
         }
+        // Buscar la Mesa a la que aplica la reservacion
         Optional<RestaurantTable> table = tableRepository.findById(tableId);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
         }
+        // Llamada a Validar la reservacion, se manda -1 como segundo parametro,
+        // ya que es un booking nuevo que se va a guardar
         validateBooking(dto, table.get(), (long)-1);
 
+        // Si pasa las validaciones (no tira Exception)
+        // Construir entidad para guardar
         Booking booking = Booking.builder()
                 .initDate(dto.initDate())
+                // calcular fecha final de la reservacion
                 .finishDate(dto.initDate().plusMinutes(dto.minutesDuration()))
                 .table(table.get())
                 .customerName(dto.customerName())
@@ -63,6 +70,7 @@ public record BookingServiceJpa (
 
     @Override
     public BookingDto findById(Long id) throws ReservationsException {
+        // Validar que si exista el Booking, sino Exception
         Optional<Booking> booking = bookingRepository.findById(id);
         if (!booking.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NOT_FOUND);
@@ -102,6 +110,7 @@ public record BookingServiceJpa (
 
     @Override
     public void deleteById(Long id) throws ReservationsException {
+        // Validar que si exista el Booking, sino Exception
         Optional<Booking> booking = bookingRepository.findById(id);
         if (!booking.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NOT_FOUND);
@@ -111,26 +120,30 @@ public record BookingServiceJpa (
 
     @Override
     public void update(BookingDto dto, Long id) throws ReservationsException {
+        // Validar que si exista el Booking, sino Exception
         Optional<Booking> booking = bookingRepository.findById(id);
         if (!booking.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NOT_FOUND);
         }
+        // Convertir a Long, en dependencia si viene un Int en el dto
         Long tableId = (long)0;
         if (dto.tableId() instanceof Integer) {
             tableId = ((Integer) dto.tableId()).longValue();
         } if (dto.tableId() instanceof Long) {
             tableId = (Long) dto.tableId();
         }
+        // Buscar la Mesa a la que aplica la reservacion
         Optional<RestaurantTable> table = tableRepository.findById(tableId);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
         }
-
+        // Llamada a Validar la reservacion, se manda el id a hacer update,
         validateBooking(dto, table.get(), id);
 
         Booking b = Booking.builder()
                 .id(id)
                 .initDate(dto.initDate())
+                // calcular fecha final de la reservacion
                 .finishDate(dto.initDate().plusMinutes(dto.minutesDuration()))
                 .table(table.get())
                 .customerName(dto.customerName())
@@ -149,28 +162,35 @@ public record BookingServiceJpa (
         if (!schedule.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SCHEDULE_FOUND);
         }
+        //Validar que el numero de personas del booking no sobrepasa
+        // la cantidad de asientos disponibles para la mesa
         if (bookingDto.peopleNumber()>table.getTotalSeats()) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SEATS_AVAILABLE);
         }
+
         LocalDateTime initialDate = bookingDto.initDate();
+        // calcular fecha final de la reservacion
         LocalDateTime finalDate = bookingDto.initDate().plusMinutes(bookingDto.minutesDuration());
 
+        //Validar que la reservacion cumpla con el horario establecido para ese dia de la semana
         if (initialDate.toLocalTime().isBefore(schedule.get().getInitTime())) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SCHEDULE_FOUND);
         }
-        if (finalDate.toLocalTime().isAfter(schedule.get().getFinishTime())) {
+        if (finalDate.toLocalTime().isBefore(schedule.get().getFinishTime())) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SCHEDULE_FOUND);
         }
 
+        //Validaciones para buscar traslapes y asi saber cuando el espacio de tiempo
+        // de la reservacion ya no esta disponible
         LocalDate date = bookingDto.initDate().toLocalDate();
-        System.out.println(date.atStartOfDay());
-        System.out.println(date.atStartOfDay().plusHours(23).plusMinutes(59));
+        // Buscar todas las reservaciones hechas en el mismo dia para la mesa
         List<Booking> bl = bookingRepository.findByTableAndInitDateBetweenOrderByInitDateAsc(table, date.atStartOfDay(), date.atStartOfDay().plusHours(23).plusMinutes(59));
         for (Booking b: bl) {
+            //No comparar el la misma entidad en el caso que se esta haciendo update
             if (b.getId() == id) {
                 continue;
             }
-            //System.out.println(b);
+
             if ((bookingDto.initDate().isAfter(b.getInitDate()) || bookingDto.initDate().equals(b.getInitDate()))
                     && bookingDto.initDate().isBefore(b.getFinishDate())) {
                 throw new ReservationsException(EMessage.RESERVATION_SAME_DAYTIME);
@@ -185,7 +205,10 @@ public record BookingServiceJpa (
         }
     }
 
-    public List<AvailabiltyDto> findAvailability(Long tableId, LocalDate date) throws ReservationsException {
+    // ALgoritmo para construir el calendario de reservaciones para una mesa en un dia completo
+    // Regresa un List de AvailabiltyDto, cada registro indica el horario en que la mesa esta libre
+    // o si ya esta reservada y quien la reservo
+    public List<Availability> findAvailability(Long tableId, LocalDate date) throws ReservationsException {
         Optional<RestaurantTable> table = tableRepository.findById(tableId);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
@@ -194,7 +217,7 @@ public record BookingServiceJpa (
         if (!schedule.isPresent()) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SCHEDULE_FOUND);
         }
-        List<AvailabiltyDto> list = new ArrayList<>();
+        List<Availability> list = new ArrayList<>();
 
         LocalDateTime initialDate = LocalDateTime.of(date, schedule.get().getInitTime());
         LocalDateTime finalDate = LocalDateTime.of(date, schedule.get().getFinishTime());
@@ -204,7 +227,7 @@ public record BookingServiceJpa (
             if (!bookingList.isEmpty()) {
                 Booking b = bookingList.get(0);
                 if (b.getInitDate().equals(initialDate)) {
-                    list.add(new AvailabiltyDto(
+                    list.add(new Availability(
                             b.getInitDate(),
                             b.getFinishDate(),
                             true,
@@ -213,14 +236,14 @@ public record BookingServiceJpa (
                 }
                 if (b.getInitDate().isAfter(initialDate)) {
                     // Agregar espacio disponible
-                    list.add(new AvailabiltyDto(
+                    list.add(new Availability(
                             initialDate,
                             b.getInitDate(),
                             false,
                             ""
                     ));
                     // Agregar booking reservado
-                    list.add(new AvailabiltyDto(
+                    list.add(new Availability(
                             b.getInitDate(),
                             b.getFinishDate(),
                             true,
@@ -233,7 +256,7 @@ public record BookingServiceJpa (
             }
         }
         if (initialDate.isBefore(finalDate)) {
-            list.add(new AvailabiltyDto(
+            list.add(new Availability(
                     initialDate,
                     finalDate,
                     false,

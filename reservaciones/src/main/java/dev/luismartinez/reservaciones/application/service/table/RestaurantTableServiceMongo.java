@@ -28,6 +28,7 @@ public record RestaurantTableServiceMongo(
 
     @Override
     public RestaurantTableDto findById(String id) throws ReservationsException {
+        //Validar que exista la mesa con el id
         Optional<RestaurantTable> table = repository.findById(id);
         if (table.isPresent()) {
             return new RestaurantTableDto(table.get().getId(), table.get().getName(), table.get().getTotalSeats());
@@ -49,6 +50,7 @@ public record RestaurantTableServiceMongo(
 
     @Override
     public void deleteById(String id) throws ReservationsException {
+        //Validar que exista la mesa con el id
         Optional<RestaurantTable> table = repository.findById(id);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);
@@ -58,6 +60,7 @@ public record RestaurantTableServiceMongo(
 
     @Override
     public void update(RestaurantTableDto dto, String id) throws ReservationsException {
+        //Validar que exista la mesa con el id
         Optional<RestaurantTable> table = repository.findById(id);
         if (!table.isPresent()) {
             throw new ReservationsException(EMessage.TABLE_NOT_FOUND);

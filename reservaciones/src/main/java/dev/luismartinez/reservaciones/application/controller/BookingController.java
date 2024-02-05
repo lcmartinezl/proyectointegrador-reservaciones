@@ -4,8 +4,7 @@ import dev.luismartinez.reservaciones.application.exception.ReservationsExceptio
 import dev.luismartinez.reservaciones.application.service.booking.BookingServiceJpa;
 import dev.luismartinez.reservaciones.application.service.booking.BookingServiceMongo;
 import dev.luismartinez.reservaciones.application.service.booking.BookinkGenericService;
-import dev.luismartinez.reservaciones.application.service.table.RestaurantTableServiceJpa;
-import dev.luismartinez.reservaciones.domain.dto.AvailabiltyDto;
+import dev.luismartinez.reservaciones.domain.dto.Availability;
 import dev.luismartinez.reservaciones.domain.dto.BookingDto;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -73,7 +72,7 @@ public record BookingController(
     @GetMapping("/find-availability/{date}/{tableId}")
     public ResponseEntity<?> findAvailability(@PathVariable("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date, @PathVariable("tableId") Object tableId) throws ReservationsException{
         //System.out.println(date);
-        List<AvailabiltyDto> list = null;
+        List<Availability> list = null;
 
         if (service instanceof BookingServiceJpa) {
             list = service.findAvailability(Long.parseLong((String) tableId), date);
