@@ -23,8 +23,8 @@ public class SecurityConfig {
 
   // Lista blanca de acceso (Rutas que no requieren autenticacion)
   private static final String[] WHITE_LIST_URLS = {
-    "/api/v1/auth/**",
-    "/api/v1/health"
+    "/api/v1/auth/**"
+
   };
 
   // Cadena de filtros de seguridad

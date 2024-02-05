@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+
 public record RestaurantTableServiceMongo(
         RestaurantTableRepositoryMongo repository
 ) implements  RestaurantTableGenericService <RestaurantTableDto, String> {

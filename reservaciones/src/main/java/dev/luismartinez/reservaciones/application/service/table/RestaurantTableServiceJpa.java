@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-
+@Service
 public record RestaurantTableServiceJpa(
         RestaurantTableRepositoryJpa repository
 ) implements  RestaurantTableGenericService <RestaurantTableDto, Long>{
@@ -22,6 +22,8 @@ public record RestaurantTableServiceJpa(
                 .name(dto.name())
                 .totalSeats(dto.totalSeats())
                 .build();
+        System.out.println("REPOSITORY");
+        System.out.println(repository);
         RestaurantTable saved = repository.save(table);
         return new RestaurantTableDto(saved.getId(), saved.getName(), saved.getTotalSeats());
     }

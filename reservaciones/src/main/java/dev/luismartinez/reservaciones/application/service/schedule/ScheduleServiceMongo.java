@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+
 public record ScheduleServiceMongo (
     ScheduleRepositoryMongo scheduleRepository
 ) implements ScheduleGenericService<ScheduleDto, String> {
