@@ -10,6 +10,7 @@ import dev.luismartinez.reservaciones.domain.entity.mongo.Schedule;
 import dev.luismartinez.reservaciones.domain.repository.mongo.BookingRepositoryMongo;
 import dev.luismartinez.reservaciones.domain.repository.mongo.RestaurantTableRepositoryMongo;
 import dev.luismartinez.reservaciones.domain.repository.mongo.ScheduleRepositoryMongo;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
+@Service
 public record BookingServiceMongo(
         BookingRepositoryMongo bookingRepository,
         RestaurantTableRepositoryMongo tableRepository,

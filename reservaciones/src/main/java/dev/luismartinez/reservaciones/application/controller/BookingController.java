@@ -71,7 +71,6 @@ public record BookingController(
 
     @GetMapping("/find-availability/{date}/{tableId}")
     public ResponseEntity<?> findAvailability(@PathVariable("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date, @PathVariable("tableId") Object tableId) throws ReservationsException{
-        //System.out.println(date);
         List<Availability> list = null;
 
         if (service instanceof BookingServiceJpa) {

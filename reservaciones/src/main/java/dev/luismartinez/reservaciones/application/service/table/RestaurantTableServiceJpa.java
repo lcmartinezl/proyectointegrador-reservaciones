@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-@Service
+
 public record RestaurantTableServiceJpa(
         RestaurantTableRepositoryJpa repository
 ) implements  RestaurantTableGenericService <RestaurantTableDto, Long>{

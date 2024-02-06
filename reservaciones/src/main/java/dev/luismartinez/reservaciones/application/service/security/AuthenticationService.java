@@ -48,15 +48,7 @@ public record AuthenticationService(
       userRepositoryJpa.save(user);
       return jwtService.generateToken(user);
     }
-    /*UserDto user = new UserDto(
-            userDto.id(),
-            userDto.name(),
-            userDto.email(),
-            passwordEncoder().encode(userDto.password()),
-            "",
-            ERole.USER);
-    userService.save(user);
-    return jwtService.generateToken(user);*/
+
   }
 
   public String login(AuthenticationDto authenticationDto) throws ReservationsException {
@@ -66,11 +58,7 @@ public record AuthenticationService(
         authenticationDto.password()
       )
     );
-    /*User user = userRepository.findUserByEmail(
-      authenticationDto.email()
-    ).orElseThrow(
-      () -> new DemoSecurityException(EMessage.USER_NOT_FOUND)
-    );*/
+
 
     if (userService instanceof UserServiceMongo) {
       Optional<dev.luismartinez.reservaciones.domain.entity.mongo.User> user = userRepositoryMongo.findUserByEmail(authenticationDto.email());

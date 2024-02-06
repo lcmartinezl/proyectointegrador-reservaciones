@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+
 public record BookingServiceJpa (
     BookingRepositoryJpa bookingRepository,
     RestaurantTableRepositoryJpa  tableRepository,
@@ -176,7 +176,7 @@ public record BookingServiceJpa (
         if (initialDate.toLocalTime().isBefore(schedule.get().getInitTime())) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SCHEDULE_FOUND);
         }
-        if (finalDate.toLocalTime().isBefore(schedule.get().getFinishTime())) {
+        if (finalDate.toLocalTime().isAfter(schedule.get().getFinishTime())) {
             throw new ReservationsException(EMessage.RESERVATION_NO_SCHEDULE_FOUND);
         }
 
